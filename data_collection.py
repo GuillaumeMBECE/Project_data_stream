@@ -11,11 +11,9 @@ tickers = {
 }
 
 def fetch_data(ticker, start_date, end_date):
-    """
-    Fetch stock data for a given ticker between start_date and end_date.
-    """
     print(f"Fetching data for {ticker}...")
     data = yf.download(ticker, start=start_date, end=end_date, interval="1d")
+    data = data[['Open', 'High', 'Low', 'Close', 'Volume']].reset_index()
     return data
 
 start_date = "2023-01-01"
@@ -26,16 +24,16 @@ os.makedirs(output_dir, exist_ok=True)
 
 all_data = {}
 
-# Fetch and save data
 for name, ticker in tickers.items():
     data = fetch_data(ticker, start_date, end_date)
     all_data[name] = data
     print(f"Data for {name} ({ticker}) collected with {len(data)} rows.")
 
-    # Save data to a CSV file in the 'data' directory
     if not data.empty:
+        data.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
+        
         filename = os.path.join(output_dir, f"{name}_stock_data.csv")
-        data.to_csv(filename)
+        data.to_csv(filename, index=False)  
         print(f"Data for {name} saved to {filename}.")
     else:
         print(f"No data found for {name}.")
