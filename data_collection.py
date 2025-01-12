@@ -1,4 +1,5 @@
 import yfinance as yf
+import os
 
 # List of company tickers
 tickers = {
@@ -20,17 +21,20 @@ def fetch_data(ticker, start_date, end_date):
 start_date = "2023-01-01"
 end_date = "2024-12-31"
 
+output_dir = "data"
+os.makedirs(output_dir, exist_ok=True)
+
 all_data = {}
 
+# Fetch and save data
 for name, ticker in tickers.items():
     data = fetch_data(ticker, start_date, end_date)
     all_data[name] = data
     print(f"Data for {name} ({ticker}) collected with {len(data)} rows.")
 
-# Save data in csv files
-for name, data in all_data.items():
+    # Save data to a CSV file in the 'data' directory
     if not data.empty:
-        filename = f"{name}_stock_data.csv"
+        filename = os.path.join(output_dir, f"{name}_stock_data.csv")
         data.to_csv(filename)
         print(f"Data for {name} saved to {filename}.")
     else:
