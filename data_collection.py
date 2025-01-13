@@ -4,8 +4,8 @@ import time
 from kafka import KafkaProducer
 from pytz import timezone
 from datetime import datetime
+import pandas as pd 
 
-# Liste des tickers des entreprises
 tickers = {
     "AXA": "CS.PA",         # France
     "Google": "GOOGL",      # États-Unis
@@ -13,6 +13,8 @@ tickers = {
     "Alibaba": "BABA",      # Chine
     "HSBC": "HSBC"          # Royaume-Uni
 }
+
+tickers_inverse = {v: k for k, v in tickers.items()}
 
 france_tz = timezone('Europe/Paris')
 
@@ -37,8 +39,7 @@ def fetch_data(ticker, start_date, end_date):
     
     return data
 
-# Périodes de récupération des données
-start_date = "2024-09-01"
+start_date = "2024-07-15"
 end_date = "2025-01-31"
 
 producer = KafkaProducer(
@@ -46,38 +47,43 @@ producer = KafkaProducer(
     value_serializer=lambda v: json.dumps(v, default=str).encode('utf-8')  
 )
 
+all_data = {}
+
 for name, ticker in tickers.items():
     data = fetch_data(ticker, start_date, end_date)
     print(f"Data for {name} ({ticker}) collected with {len(data)} rows.")
     
     if not data.empty:
         data.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'market_cap', 'pe_ratio', 'dividend_yield']
-        
-        for current_day in data['Date']:
-            daily_data = data[data['Date'] == current_day].iloc[0]
-            
-            # Créer un dictionnaire avec les données journalières et les informations fondamentales
-            tick = {
-                "Date": current_day.strftime("%Y-%m-%d"),  
-                "Open": float(daily_data['Open']), 
-                "High": float(daily_data['High']),  
-                "Low": float(daily_data['Low']),    
-                "Close": float(daily_data['Close']), 
-                "Volume": int(daily_data['Volume']), 
-                "market_cap": int(daily_data['market_cap']),
-                "pe_ratio": float(daily_data['pe_ratio']),
-                "dividend_yield": float(daily_data['dividend_yield']),
-                "name": name,
-                "ticker": ticker
-            }
-            
-            tick = {str(k): v for k, v in tick.items()}
-            
-            producer.send('full_data', tick)
-            print(f"Sent tick to Kafka for {name} ({ticker}): {tick}")
-            
-            time.sleep(1)  
+        all_data[ticker] = data
     else:
         print(f"No data found for {name}.")
+
+for current_day in pd.date_range(start=start_date, end=end_date, freq='D'):  
+    daily_data = []
+    
+    for ticker, data in all_data.items():
+        if current_day in data['Date'].values:
+            day_data = data[data['Date'] == current_day].iloc[0]
+            
+            daily_data.append({
+                "Date": current_day.strftime("%Y-%m-%d"),  
+                "Open": float(day_data['Open']), 
+                "High": float(day_data['High']),  
+                "Low": float(day_data['Low']),    
+                "Close": float(day_data['Close']), 
+                "Volume": int(day_data['Volume']), 
+                "market_cap": int(day_data['market_cap']),
+                "pe_ratio": float(day_data['pe_ratio']),
+                "dividend_yield": float(day_data['dividend_yield']),
+                "name": tickers_inverse[ticker],  
+                "ticker": ticker
+            })
+    
+    if daily_data:
+        producer.send('full_data', {"date": current_day.strftime("%Y-%m-%d"), "data": daily_data})
+        print(f"Sent daily data to Kafka for {current_day.strftime('%Y-%m-%d')}: {daily_data}")
+    
+    time.sleep(0.5) 
 
 # producer.close()
