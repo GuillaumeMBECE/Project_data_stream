@@ -3,8 +3,8 @@ import json
 import time
 from kafka import KafkaProducer
 from pytz import timezone
-from datetime import datetime
-import pandas as pd 
+from datetime import datetime, timedelta
+import pandas as pd
 
 tickers = {
     "AXA": "CS.PA",         # France
@@ -16,13 +16,13 @@ tickers = {
 
 tickers_inverse = {v: k for k, v in tickers.items()}
 
-france_tz = timezone('Europe/Paris')
-
 def fetch_data(ticker, start_date, end_date):
     print(f"Fetching data for {ticker}...")
+    data = yf.download(ticker, start=start_date, end=end_date, interval="1h")
     
-    # Récupérer les données boursières tout les jours
-    data = yf.download(ticker, start=start_date, end=end_date, interval="1d")
+    if data.empty:
+        print(f"No data found for {ticker}.")
+        return pd.DataFrame()
     
     data = data[['Open', 'High', 'Low', 'Close', 'Volume']].reset_index()
     
@@ -54,36 +54,37 @@ for name, ticker in tickers.items():
     print(f"Data for {name} ({ticker}) collected with {len(data)} rows.")
     
     if not data.empty:
-        data.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'market_cap', 'pe_ratio', 'dividend_yield']
+        data.columns = ['DateTime', 'Open', 'High', 'Low', 'Close', 'Volume', 'market_cap', 'pe_ratio', 'dividend_yield']
         all_data[ticker] = data
     else:
         print(f"No data found for {name}.")
 
-for current_day in pd.date_range(start=start_date, end=end_date, freq='D'):  
-    daily_data = []
+all_hourly_data = []
+
+for ticker, data in all_data.items():
+    for _, row in data.iterrows():
+        all_hourly_data.append({
+            "DateTime": row['DateTime'],  
+            "Open": float(row['Open']),
+            "High": float(row['High']),
+            "Low": float(row['Low']),
+            "Close": float(row['Close']),
+            "Volume": int(row['Volume']),
+            "market_cap": int(row['market_cap']),
+            "pe_ratio": float(row['pe_ratio']),
+            "dividend_yield": float(row['dividend_yield']),
+            "name": tickers_inverse[ticker],
+            "ticker": ticker
+        })
+
+all_hourly_data = sorted(all_hourly_data, key=lambda x: x['DateTime'])
+
+for message in all_hourly_data:
+    message['DateTime'] = message['DateTime'].strftime("%Y-%m-%d %H:%M:%S")
     
-    for ticker, data in all_data.items():
-        if current_day in data['Date'].values:
-            day_data = data[data['Date'] == current_day].iloc[0]
-            
-            daily_data.append({
-                "Date": current_day.strftime("%Y-%m-%d"),  
-                "Open": float(day_data['Open']), 
-                "High": float(day_data['High']),  
-                "Low": float(day_data['Low']),    
-                "Close": float(day_data['Close']), 
-                "Volume": int(day_data['Volume']), 
-                "market_cap": int(day_data['market_cap']),
-                "pe_ratio": float(day_data['pe_ratio']),
-                "dividend_yield": float(day_data['dividend_yield']),
-                "name": tickers_inverse[ticker],  
-                "ticker": ticker
-            })
+    producer.send('full_data', message)
+    print(f"Sent data to Kafka: {message}\n")
     
-    if daily_data:
-        producer.send('full_data', {"date": current_day.strftime("%Y-%m-%d"), "data": daily_data})
-        print(f"Sent daily data to Kafka for {current_day.strftime('%Y-%m-%d')}: {daily_data}")
-    
-    time.sleep(0.5) 
+    time.sleep(0.001)
 
 # producer.close()
