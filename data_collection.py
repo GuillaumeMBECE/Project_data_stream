@@ -5,6 +5,7 @@ from kafka import KafkaProducer
 from pytz import timezone
 from datetime import datetime, timedelta
 import pandas as pd
+import os
 
 tickers = {
     "AXA": "CS.PA",         # France
@@ -49,6 +50,10 @@ producer = KafkaProducer(
 
 all_data = {}
 
+output_dir = "data"
+os.makedirs(output_dir, exist_ok=True)
+
+
 for name, ticker in tickers.items():
     data = fetch_data(ticker, start_date, end_date)
     print(f"Data for {name} ({ticker}) collected with {len(data)} rows.")
@@ -56,6 +61,10 @@ for name, ticker in tickers.items():
     if not data.empty:
         data.columns = ['DateTime', 'Open', 'High', 'Low', 'Close', 'Volume', 'market_cap', 'pe_ratio', 'dividend_yield']
         all_data[ticker] = data
+        csv_path = os.path.join(output_dir, f"{name}_stock_data.csv")
+        data.to_csv(csv_path, index=False)
+        print(f"Données pour {name} enregistrées dans le fichier : {csv_path}")
+
     else:
         print(f"No data found for {name}.")
 
