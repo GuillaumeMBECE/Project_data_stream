@@ -94,6 +94,6 @@ for message in all_hourly_data:
     producer.send('full_data', message)
     print(f"Sent data to Kafka: {message}\n")
     
-    time.sleep(0.001)
+    time.sleep(0.01)
 
 # producer.close()

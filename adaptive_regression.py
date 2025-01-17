@@ -1,5 +1,5 @@
 import json
-from kafka import KafkaConsumer
+from kafka import KafkaConsumer, KafkaProducer
 from river import linear_model, metrics
 from sklearn.preprocessing import StandardScaler
 import math
@@ -10,11 +10,14 @@ consumer = KafkaConsumer(
     value_deserializer=lambda v: json.loads(v.decode('utf-8'))  
 )
 
-models = {}
+producer = KafkaProducer(
+    bootstrap_servers='localhost:9092',  
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')  
+)
 
+models = {}
 mae_metric = metrics.MAE()
 mse_metric = metrics.MSE()
-
 scaler = StandardScaler()
 
 def reset_model():
@@ -36,6 +39,8 @@ for message in consumer:
     data = message.value
     ticker = data['ticker']
     company_name = data['name']
+    date = data['DateTime']  
+    model_type = "online" 
 
     x = {
         "Open": data['Open'],
@@ -48,16 +53,12 @@ for message in consumer:
     }
 
     y = data['Close']
-
     scaled_x = scaler.fit_transform([list(x.values())])[0]
-
     model = get_model_for_company(company_name)
-
     y_pred = validate_and_train_model(model, dict(zip(x.keys(), scaled_x)), y)
 
     mae_metric.update(y, y_pred)
     mse_metric.update(y, y_pred)
-
     rmse = math.sqrt(mse_metric.get())  
 
     print(f"Entreprise: {company_name} ({ticker})")
@@ -67,3 +68,13 @@ for message in consumer:
     print(f"  - MSE: {mse_metric.get()}")
     print(f"  - RMSE: {rmse}")
     print('-' * 50)
+
+    result = {
+        "Model": model_type,  
+        "DateTime": date,
+        "Company": company_name,
+        "Prediction": float(y_pred),
+        "Actual": float(y)
+    }
+    print(f"result {result}")
+    producer.send('result', result)
