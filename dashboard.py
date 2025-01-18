@@ -28,12 +28,23 @@ data = {
 }
 
 metrics = {
-    'AXA': {'RMSE_batch': None, 'RMSE_online': None, 'MSE_batch': None, 'MSE_online': None, 'MAE_batch': None, 'MAE_online': None},
-    'HSBC': {'RMSE_batch': None, 'RMSE_online': None, 'MSE_batch': None, 'MSE_online': None, 'MAE_batch': None, 'MAE_online': None},
-    'Toyota': {'RMSE_batch': None, 'RMSE_online': None, 'MSE_batch': None, 'MSE_online': None, 'MAE_batch': None, 'MAE_online': None},
-    'Alibaba': {'RMSE_batch': None, 'RMSE_online': None, 'MSE_batch': None, 'MSE_online': None, 'MAE_batch': None, 'MAE_online': None},
-    'Google': {'RMSE_batch': None, 'RMSE_online': None, 'MSE_batch': None, 'MSE_online': None, 'MAE_batch': None, 'MAE_online': None}
+    'AXA': {'RMSE_batch': None, 'RMSE_online': None, 'RMSE_batch_incremental': None,
+            'MSE_batch': None, 'MSE_online': None, 'MSE_batch_incremental': None,
+            'MAE_batch': None, 'MAE_online': None, 'MAE_batch_incremental': None},
+    'HSBC': {'RMSE_batch': None, 'RMSE_online': None, 'RMSE_batch_incremental': None,
+             'MSE_batch': None, 'MSE_online': None, 'MSE_batch_incremental': None,
+             'MAE_batch': None, 'MAE_online': None, 'MAE_batch_incremental': None},
+    'Toyota': {'RMSE_batch': None, 'RMSE_online': None, 'RMSE_batch_incremental': None,
+               'MSE_batch': None, 'MSE_online': None, 'MSE_batch_incremental': None,
+               'MAE_batch': None, 'MAE_online': None, 'MAE_batch_incremental': None},
+    'Alibaba': {'RMSE_batch': None, 'RMSE_online': None, 'RMSE_batch_incremental': None,
+                'MSE_batch': None, 'MSE_online': None, 'MSE_batch_incremental': None,
+                'MAE_batch': None, 'MAE_online': None, 'MAE_batch_incremental': None},
+    'Google': {'RMSE_batch': None, 'RMSE_online': None, 'RMSE_batch_incremental': None,
+               'MSE_batch': None, 'MSE_online': None, 'MSE_batch_incremental': None,
+               'MAE_batch': None, 'MAE_online': None, 'MAE_batch_incremental': None}
 }
+
 
 graph_containers = {
     'AXA': st.empty(),
@@ -86,6 +97,11 @@ try:
                 metrics[company_name]['RMSE_online'] = rmse
                 metrics[company_name]['MSE_online'] = mse
                 metrics[company_name]['MAE_online'] = mae
+            elif model_type == "batch_incremental":
+                metrics[company_name]['RMSE_batch_incremental'] = rmse
+                metrics[company_name]['MSE_batch_incremental'] = mse
+                metrics[company_name]['MAE_batch_incremental'] = mae
+
 
             metrics_with_company_name = metrics[company_name].copy()
             metrics_with_company_name['Company'] = company_name  
@@ -102,6 +118,16 @@ try:
                     name='Prediction (Online)',
                     line=dict(color='blue')  
                 ))
+            
+            if "batch_incremental" in data[company_name]['Model'].values:
+                fig.add_trace(go.Scatter(
+                    x=data[company_name][data[company_name]['Model'] == 'batch_incremental']['DateTime'],
+                    y=data[company_name][data[company_name]['Model'] == 'batch_incremental']['Prediction'],
+                    mode='lines',
+                    name='Prediction (Batch Incremental)',
+                    line=dict(color='red')  
+                ))
+
 
             if "batch" in data[company_name]['Model'].values:
                 fig.add_trace(go.Scatter(

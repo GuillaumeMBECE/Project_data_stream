@@ -89,6 +89,7 @@ for message in consumer:
         "Company": company_name,
         "Prediction": float(y_pred),
         "Actual": float(y),
+        "MSE": mse_metric.get(),
         "MAE": mae_metric.get(),
         "RMSE": rmse
     }
