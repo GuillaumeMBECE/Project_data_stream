@@ -15,13 +15,16 @@ producer = KafkaProducer(
 
 data_dir = "data"
 
-def send_to_kafka(company_name, date, true_close, predicted_close):
+def send_to_kafka(company_name, date, true_close, predicted_close,rmse,mse,mae):
     message = {
         'Company': company_name,
         'DateTime': date,
         'Prediction': predicted_close,
         'Actual': true_close,
-        'Model': 'batch'  
+        'Model': 'batch',
+        'RMSE':  rmse,
+        'MSE' : mse,
+        'MAE' : mae
     }
     producer.send('result', value=message) 
 
@@ -74,7 +77,7 @@ for file_name in os.listdir(data_dir):
                   f"Predicted Close: {row['Predicted Close']:.2f}, "
                   f"Erreur: {row['Error']:.2f}")
 
-            send_to_kafka(company_name, row['Date'], row['True Close'], row['Predicted Close'])
+            send_to_kafka(company_name, row['Date'], row['True Close'], row['Predicted Close'],rmse,mse,mae)
 
         print('-' * 50)
 

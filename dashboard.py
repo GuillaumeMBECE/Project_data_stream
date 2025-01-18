@@ -5,11 +5,11 @@ from kafka import KafkaConsumer
 import json
 
 st.set_page_config(layout="wide")
-st.title("Dashboard - Prédictions pour HSBC")
+st.title("Dashboard - Prédictions pour AXA, HSBC, Toyota, Alibaba et Google")
 
 broker = "localhost:9092"
 topic = "result"
-group = "hsbc-visualization-group"
+group = "axa-hsbc-visualization-group"
 
 consumer = KafkaConsumer(
     topic,
@@ -19,73 +19,117 @@ consumer = KafkaConsumer(
     value_deserializer=lambda v: json.loads(v.decode("utf-8"))
 )
 
-graph_container = st.empty()
-data_table = st.empty()
+data = {
+    'AXA': pd.DataFrame(columns=["DateTime", "Prediction", "Actual", "Model", "Company", "RMSE", "MSE", "MAE"]),
+    'HSBC': pd.DataFrame(columns=["DateTime", "Prediction", "Actual", "Model", "Company", "RMSE", "MSE", "MAE"]),
+    'Toyota': pd.DataFrame(columns=["DateTime", "Prediction", "Actual", "Model", "Company", "RMSE", "MSE", "MAE"]),
+    'Alibaba': pd.DataFrame(columns=["DateTime", "Prediction", "Actual", "Model", "Company", "RMSE", "MSE", "MAE"]),
+    'Google': pd.DataFrame(columns=["DateTime", "Prediction", "Actual", "Model", "Company", "RMSE", "MSE", "MAE"])
+}
 
-data = pd.DataFrame(columns=["DateTime", "Prediction", "Actual", "Model"])
+metrics = {
+    'AXA': {'RMSE_batch': None, 'RMSE_online': None, 'MSE_batch': None, 'MSE_online': None, 'MAE_batch': None, 'MAE_online': None},
+    'HSBC': {'RMSE_batch': None, 'RMSE_online': None, 'MSE_batch': None, 'MSE_online': None, 'MAE_batch': None, 'MAE_online': None},
+    'Toyota': {'RMSE_batch': None, 'RMSE_online': None, 'MSE_batch': None, 'MSE_online': None, 'MAE_batch': None, 'MAE_online': None},
+    'Alibaba': {'RMSE_batch': None, 'RMSE_online': None, 'MSE_batch': None, 'MSE_online': None, 'MAE_batch': None, 'MAE_online': None},
+    'Google': {'RMSE_batch': None, 'RMSE_online': None, 'MSE_batch': None, 'MSE_online': None, 'MAE_batch': None, 'MAE_online': None}
+}
 
-online_received = False
-batch_received = False
+graph_containers = {
+    'AXA': st.empty(),
+    'HSBC': st.empty(),
+    'Toyota': st.empty(),
+    'Alibaba': st.empty(),
+    'Google': st.empty()
+}
+
+metrics_tables = {
+    'AXA': st.empty(),
+    'HSBC': st.empty(),
+    'Toyota': st.empty(),
+    'Alibaba': st.empty(),
+    'Google': st.empty()
+}
 
 try:
     for message in consumer:
         result = message.value
         print(result)
 
-        if result["Company"] == "AXA":
+        company_name = result["Company"]
+        if company_name in data:
+            model_type = result["Model"]
+            rmse = result["RMSE"]
+            mse = result["MSE"]
+            mae = result["MAE"]
+
             new_row = {
-                "DateTime": pd.to_datetime(result["DateTime"]),  
+                "DateTime": pd.to_datetime(result["DateTime"]),
                 "Prediction": result["Prediction"],
                 "Actual": result["Actual"],
-                "Model": result["Model"]  
+                "Model": model_type,
+                "Company": company_name,
+                "RMSE": rmse,
+                "MSE": mse,
+                "MAE": mae
             }
-            data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
 
-            data_table.write(data)
+            data[company_name] = pd.concat([data[company_name], pd.DataFrame([new_row])], ignore_index=True)
 
-            if "online" in data['Model'].values:
-                online_received = True
-            if "batch" in data['Model'].values:
-                batch_received = True
+            data[company_name] = data[company_name].tail(1000)
 
+            if model_type == "batch":
+                metrics[company_name]['RMSE_batch'] = rmse
+                metrics[company_name]['MSE_batch'] = mse
+                metrics[company_name]['MAE_batch'] = mae
+            elif model_type == "online":
+                metrics[company_name]['RMSE_online'] = rmse
+                metrics[company_name]['MSE_online'] = mse
+                metrics[company_name]['MAE_online'] = mae
+
+            metrics_with_company_name = metrics[company_name].copy()
+            metrics_with_company_name['Company'] = company_name  
+
+            metrics_tables[company_name].write(pd.DataFrame([metrics_with_company_name]))
+                
             fig = go.Figure()
 
-            if online_received:
+            if "online" in data[company_name]['Model'].values:
                 fig.add_trace(go.Scatter(
-                    x=data[data['Model'] == 'online']['DateTime'],
-                    y=data[data['Model'] == 'online']['Prediction'],
+                    x=data[company_name][data[company_name]['Model'] == 'online']['DateTime'],
+                    y=data[company_name][data[company_name]['Model'] == 'online']['Prediction'],
                     mode='lines',
                     name='Prediction (Online)',
                     line=dict(color='blue')  
                 ))
 
-            if batch_received:
+            if "batch" in data[company_name]['Model'].values:
                 fig.add_trace(go.Scatter(
-                    x=data[data['Model'] == 'batch']['DateTime'],
-                    y=data[data['Model'] == 'batch']['Prediction'],
+                    x=data[company_name][data[company_name]['Model'] == 'batch']['DateTime'],
+                    y=data[company_name][data[company_name]['Model'] == 'batch']['Prediction'],
                     mode='lines',
                     name='Prediction (Batch)',
                     line=dict(color='green')  
                 ))
 
-            if online_received:
+            if "online" in data[company_name]['Model'].values:
                 fig.add_trace(go.Scatter(
-                    x=data[data['Model'] == 'online']['DateTime'],
-                    y=data[data['Model'] == 'online']['Actual'],
+                    x=data[company_name][data[company_name]['Model'] == 'online']['DateTime'],
+                    y=data[company_name][data[company_name]['Model'] == 'online']['Actual'],
                     mode='lines',
                     name='Actual (Online)',
                     line=dict(color='orange')  
                 ))
 
             fig.update_layout(
-                title="Prédiction vs Réel pour HSBC",
+                title=f"Prédiction vs Réel pour {company_name}",
                 xaxis_title="Date",
                 yaxis_title="Prix de Clôture",
                 legend_title="Modèles",
                 template="plotly_white"
             )
 
-            graph_container.plotly_chart(fig, use_container_width=True)
+            graph_containers[company_name].plotly_chart(fig, use_container_width=True)
 
 except KeyboardInterrupt:
     st.write("Arrêt du consommateur Kafka.")

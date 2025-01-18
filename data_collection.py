@@ -40,7 +40,7 @@ def fetch_data(ticker, start_date, end_date):
     
     return data
 
-start_date = "2024-07-15"
+start_date = "2024-09-01"
 end_date = "2025-01-31"
 
 producer = KafkaProducer(
