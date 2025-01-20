@@ -87,7 +87,7 @@ try:
 
             data[company_name] = pd.concat([data[company_name], pd.DataFrame([new_row])], ignore_index=True)
 
-            data[company_name] = data[company_name].tail(1000)
+            #data[company_name] = data[company_name].tail(1000)
 
             if model_type == "batch":
                 metrics[company_name]['RMSE_batch'] = rmse

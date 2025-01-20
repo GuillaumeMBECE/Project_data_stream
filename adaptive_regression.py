@@ -20,7 +20,7 @@ models = {}
 metrics_per_company = {}  
 scaler = StandardScaler()
 
-start_date = datetime(2024, 12, 1)
+start_date = datetime(2024, 10, 30)
 
 def reset_model():
     return linear_model.LinearRegression()  

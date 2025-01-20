@@ -77,7 +77,7 @@ for file_name in os.listdir(data_dir):
                   f"Predicted Close: {row['Predicted Close']:.2f}, "
                   f"Erreur: {row['Error']:.2f}")
 
-            send_to_kafka(company_name, row['Date'], row['True Close'], row['Predicted Close'],rmse,mse,mae)
+            send_to_kafka(company_name, row['Date'], row['True Close'], row['Predicted Close'],rmse*10,mse*100,mae*10)
 
         print('-' * 50)
 
