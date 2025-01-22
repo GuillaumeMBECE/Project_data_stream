@@ -126,19 +126,14 @@ The aim of this project is to create a real time streaming application with Kafk
 ## Result :
 
 
-| Company  | Online Model MSE | Online Model MAE | Online Model RMSE | Batch Incremental Model MSE | Batch Incremental Model MAE | Batch Incremental Model RMSE | Batch Model MSE | Batch Model MAE | Batch Model RMSE |
-
+| Company  | Online Model MSE | Online Model MAE | Online Model RMSE | Batch Incremental Model MSE | Batch Incremental Model MAE | Batch Incremental Model RMSE | Batch Model MSE | Batch Model MAE | Batch Model RMSE |
 |----------|------------------|------------------|-------------------|----------------------------|-----------------------------|------------------------------|-----------------|-----------------|------------------|
+| AXA      | 0.333            | 0.4622           | 0.5771            | 0.8239                     | 0.4097                      | 0.6789                       | 0.3016          | 0.3189          | 0.5492           |
+| HSBC     | 0.8433           | 0.8043           | 0.9183            | 0.825                      | 0.331                       | 0.6806                       | 0.2305          | 0.3195          | 0.4801           |
+| Toyota   | 27.5298          | 3.3289           | 5.2469            | 0.8252                     | 1.8379                      | 0.681                        | 6.3021          | 0.3197          | 2.5104           |
+| Alibaba  | 12.0614          | 2.7797           | 3.4729            | 0.8251                     | 1.364                       | 0.6808                       | 3.6192          | 0.3196          | 1.9024           |
+| Google   | 46.2691          | 5.1443           | 6.8021            | 0.8253                     | 2.5814                      | 0.6812                       | 12.7031         | 0.3197          | 3.5641           |
 
-| AXA      | 0.333            | 0.4622           | 0.5771            | 0.8239                     | 0.4097                      | 0.6789                       | 0.3016          | 0.3189          | 0.5492           |
-
-| HSBC     | 0.8433           | 0.8043           | 0.9183            | 0.825                      | 0.331                       | 0.6806                       | 0.2305          | 0.3195          | 0.4801           |
-
-| Toyota   | 27.5298          | 3.3289           | 5.2469            | 0.8252                     | 1.8379                      | 0.681                        | 6.3021          | 0.3197          | 2.5104           |
-
-| Alibaba  | 12.0614          | 2.7797           | 3.4729            | 0.8251                     | 1.364                       | 0.6808                       | 3.6192          | 0.3196          | 1.9024           |
-
-| Google   | 46.2691          | 5.1443           | 6.8021            | 0.8253                     | 2.5814                      | 0.6812                       | 12.7031         | 0.3197          | 3.5641           |
 
 
 
