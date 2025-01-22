@@ -1,45 +1,47 @@
 # Project_data_stream
 
-## 1. Clone the repository 
+## I - Compile the project
+
+# 1. Clone the repository 
 
 ```git clone git@github.com:lhteillet/Stream_Project.git```
 
 ## 2. Start the project :
 # 2.1 On Windows: 
 
-# Run Zookeeper
+Run Zookeeper : 
 
-```bash .\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties ```
+```shell .\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties ```
 
-# Run kafka server
+Run kafka server :
 
-```bash .\bin\windows\kafka-server-start.bat .\config\server.properties ```
+```shell .\bin\windows\kafka-server-start.bat .\config\server.properties ```
 
-# Create topics 
+Create topics :
 
-```bash .\bin\windows\kafka-topics.bat --create --topic full_data --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1 ```
+```shell .\bin\windows\kafka-topics.bat --create --topic full_data --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1 ```
 
-```bash .\bin\windows\kafka-topics.bat --create --topic result --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1 ```
+```shell .\bin\windows\kafka-topics.bat --create --topic result --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1 ```
 
-# Display topics
+Display topics :
 
-```bash .\bin\windows\kafka-topics.bat --list --bootstrap-server localhost:9092 ```
+```shell .\bin\windows\kafka-topics.bat --list --bootstrap-server localhost:9092 ```
 
 # 2.2 On Linux
 
-# Run Zookeeper
+Run Zookeeper :
 
-```bash ./bin/zookeeper-server-start.sh ./config/zookeeper.properties ```
+```shell ./bin/zookeeper-server-start.sh ./config/zookeeper.properties ```
 
-# Run kafka server
+Run kafka server :
 
-```bash ./bin/kafka-server-start.sh ./config/server.properties ```
+```shell ./bin/kafka-server-start.sh ./config/server.properties ```
 
-# Create topics 
+Create topics :
 
-```bash ./bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic full_data ```
+```shell ./bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic full_data ```
 
-```bash ./bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic result ```
+```shell ./bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic result ```
 
 ## 3. Launching scripts
 
@@ -47,27 +49,53 @@
 
 We must first launch the application to access the results. The following Python command opens a local website for visualization:
 
-```bash streamlit run dashboard.py ```
+```shell streamlit run dashboard.py ```
 
 # Batch Regression:
 
 To obtain the results of the Batch model (static data):
 
-```bash python batch_regression.py ```
+```shell python batch_regression.py ```
 
 # Start the data stream
 
-```bash python data_collection.py ```
+```shell python data_collection.py ```
 
 # Incremental
 
 The results of the incremental model:
 
-```bash python batch_regression.py ```
+```shell python batch_regression.py ```
 
 # Online Regression
 
-```bash python adaptive_regression.py ```
+```shell python adaptive_regression.py ```
+
+## 4. Visualization
+
+Go to http://localhost:8501/ to see the dashboard in real time
+
+## II - Goal of the project
+
+The aim of this project is to create a real time streaming application with Kafka, collecting financial data from Yahoo Finance API. The main goal was to design a pipeline that could handle both historical data and real-time data streams, to predict stock prices of large companies like AXA, HSBC, Toyota, Alibaba, and Google.
+
+# 3 models : 
+
+- Full batch linear regression
+- Incremental linear regression
+- Online linear regression with river
+
+# Result :
+
+| Company  | Online Model MSE | Online Model MAE | Online Model RMSE | Batch Incremental Model MSE | Batch Incremental Model MAE | Batch Incremental Model RMSE | Batch Model MSE | Batch Model MAE | Batch Model RMSE |
+|----------|------------------|------------------|-------------------|----------------------------|-----------------------------|------------------------------|-----------------|-----------------|------------------|
+| AXA      | 0.333            | 0.4622           | 0.5771            | 0.8239                     | 0.4097                      | 0.6789                       | 0.3016          | 0.3189          | 0.5492           |
+| HSBC     | 0.8433           | 0.8043           | 0.9183            | 0.825                      | 0.331                       | 0.6806                       | 0.2305          | 0.3195          | 0.4801           |
+| Toyota   | 27.5298          | 3.3289           | 5.2469            | 0.8252                     | 1.8379                      | 0.681                        | 6.3021          | 0.3197          | 2.5104           |
+| Alibaba  | 12.0614          | 2.7797           | 3.4729            | 0.8251                     | 1.364                       | 0.6808                       | 3.6192          | 0.3196          | 1.9024           |
+| Google   | 46.2691          | 5.1443           | 6.8021            | 0.8253                     | 2.5814                      | 0.6812                       | 12.7031         | 0.3197          | 3.5641           |
+
+
 
 ## Collaborators
 
